@@ -40,7 +40,9 @@
 ## 快速开始
 
 ```bash
-# 1. 环境要求：Node 22+（原生跑 .ts），Python 3.11+，chromadb
+# 1. 环境要求：Node 23.6+（原生跑 .ts，无需编译；低版本需加 --experimental-strip-types），
+#    Python 3.11+，chromadb
+#    （仓库根有 .tool-versions，asdf 用户 cd 进目录自动切 24.15.0）
 pip install chromadb
 
 # 2. 配置 embedding API（BGE-M3，SiliconFlow）
