@@ -1,0 +1,10 @@
+{
+  "roles": {
+    "viewer": ["rail_query"],
+    "operator": ["rail_query", "rail_workorder"]
+  },
+  "tokens": {
+    "tok-zhang-9f3a": { "user": "zhangsan", "roles": ["operator"] },
+    "tok-li-77c1": { "user": "lisi", "roles": ["viewer"] }
+  }
+}
