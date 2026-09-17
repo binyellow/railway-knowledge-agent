@@ -60,6 +60,19 @@ function readBody(req: IncomingMessage): Promise<string> {
 }
 
 createServer(async (req, res) => {
+  // ── 根路径：服务自描述（浏览器访问 http://127.0.0.1:18790/ 可见）──
+  if (req.method === 'GET' && (req.url === '/' || req.url === '/healthz')) {
+    res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
+      service: 'mcp-rail-server',
+      version: '0.3.0',
+      endpoints: {
+        mcp: 'POST /mcp (Authorization: Bearer <token>)',
+        rest: 'GET /api/rail_query?q=... | /api/rail_workorder?q=...',
+      },
+    }));
+    return;
+  }
+
   // ── REST GET 双协议暴露：GET /api/<tool>?q=...（给不认识 JSON-RPC 的普通系统）──
   if (req.method === 'GET' && req.url!.startsWith('/api/')) {
     const u = new URL(req.url!, 'http://localhost');
