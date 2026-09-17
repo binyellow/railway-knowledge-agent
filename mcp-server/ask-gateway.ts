@@ -3,8 +3,9 @@
 // 启动：node mcp-server/ask-gateway.ts（需 Node 23.6+，openclaw 在 PATH 中）
 import http from "node:http";
 import net from "node:net";
+import fs from "node:fs";
 import { execFile } from "node:child_process";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 
 const PORT = Number(process.env.RAIL_GATEWAY_PORT ?? 18791);
 const OC_BIN = process.env.RAIL_OPENCLAW_BIN ?? "openclaw";
@@ -12,6 +13,12 @@ const SESSION = process.env.RAIL_ASK_SESSION ?? "web-demo";
 const OC_HOST = process.env.RAIL_OC_HOST ?? "127.0.0.1";
 const OC_PORT = Number(process.env.RAIL_OC_PORT ?? 18789);
 const TIMEOUT_MS = Number(process.env.RAIL_ASK_TIMEOUT_MS ?? 120) * 1000;
+const LOG_FILE = process.env.RAIL_ASK_LOG ?? `${import.meta.dirname}/ask-gateway.log`;
+
+// 每次请求一行 JSONL：ts / q / 状态 / 耗时 / 是否调了工具
+function logLine(obj: Record<string, unknown>) {
+  fs.appendFileSync(LOG_FILE, JSON.stringify({ ts: new Date().toISOString(), ...obj }) + "\n");
+}
 
 function gatewayUp(): Promise<boolean> {
   return new Promise((resolve) => {
@@ -56,6 +63,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (!(await gatewayUp())) {
+    logLine({ q, status: 503, error: "gateway-down" });
     return json(503, {
       error: `OpenClaw Gateway (${OC_HOST}:${OC_PORT}) 未运行`,
       hint: "先启动：openclaw gateway，再重试本接口",
@@ -66,6 +74,7 @@ const server = http.createServer(async (req, res) => {
   const args = ["agent", "--message", q, "--session-id", SESSION, "--json"];
   execFile(OC_BIN, args, { timeout: TIMEOUT_MS, maxBuffer: 8 * 1024 * 1024, env: childEnv }, (err, stdout, stderr) => {
     if (err) {
+      logLine({ q, status: 502, duration_ms: Date.now() - started, error: err.message });
       return json(502, { error: err.message, stderr: stderr.slice(0, 500), hint: "检查 openclaw 日志与 rail-tools 注册状态" });
     }
     let agent;
@@ -74,6 +83,8 @@ const server = http.createServer(async (req, res) => {
     } catch {
       agent = { raw: stdout };
     }
+    const ts = agent?.result?.meta?.toolSummary;
+    logLine({ q, status: 200, duration_ms: Date.now() - started, tools: ts?.tools ?? [] });
     json(200, { question: q, session: SESSION, duration_ms: Date.now() - started, agent });
   });
 });

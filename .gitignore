@@ -4,6 +4,7 @@ __pycache__/
 
 # 运行时产物（不入库；样例见 samples/audit.sample.log）
 audit.log
+ask-gateway.log
 server.pid
 server.out
 
