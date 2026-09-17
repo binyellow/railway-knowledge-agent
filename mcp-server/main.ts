@@ -43,12 +43,15 @@ async function execTool(name: string, args: Record<string, string>): Promise<str
 }
 
 // 鉴权三层映射：token → 身份 → 角色 → 工具白名单
-function auth(req: IncomingMessage): { user: string; tools: string[] } | null {
-  const token = (req.headers.authorization ?? '').replace('Bearer ', '');
+function authByToken(token: string): { user: string; tools: string[] } | null {
   const ident = PERMS.tokens[token];
   if (!ident) return null;
   const tools = [...new Set(ident.roles.flatMap((r: string) => PERMS.roles[r] ?? []))];
   return { user: ident.user, tools };
+}
+
+function auth(req: IncomingMessage): { user: string; tools: string[] } | null {
+  return authByToken((req.headers.authorization ?? '').replace('Bearer ', ''));
 }
 
 function readBody(req: IncomingMessage): Promise<string> {
@@ -76,7 +79,10 @@ createServer(async (req, res) => {
   // ── REST GET 双协议暴露：GET /api/<tool>?q=...（给不认识 JSON-RPC 的普通系统）──
   if (req.method === 'GET' && req.url!.startsWith('/api/')) {
     const u = new URL(req.url!, 'http://localhost');
-    const caller = auth(req); // 鉴权复用：Authorization: Bearer（别放 query，会进访问日志）
+    // 演示模式：RAIL_ALLOW_QUERY_TOKEN=1 时允许 ?token= 传凭证（浏览器直查用）。
+    // 默认关闭——token 进 query 会留在访问日志，生产必须走 Authorization header。
+    const caller = auth(req)
+      ?? (process.env.RAIL_ALLOW_QUERY_TOKEN === '1' ? authByToken(u.searchParams.get('token') ?? '') : null);
     if (!caller) { audit({ tool: '(auth)', caller: 'unknown', via: 'rest', status: 'denied' }); res.writeHead(401).end(); return; }
     const tool = u.pathname.replace('/api/', '');
     if (!caller.tools.includes(tool)) { res.writeHead(403).end(); return; } // 权限复用
