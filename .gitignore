@@ -1,0 +1,14 @@
+node_modules/
+__pycache__/
+*.pyc
+
+# 运行时产物（不入库；样例见 samples/audit.sample.log）
+audit.log
+server.pid
+server.out
+
+# 向量库二进制数据（重新运行 build_kb.py 生成）
+skills/rail-knowledge-base/chroma_data/
+
+# 密钥
+.env
