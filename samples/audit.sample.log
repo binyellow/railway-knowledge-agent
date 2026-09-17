@@ -1,0 +1,7 @@
+{"ts":"2026-08-31T03:30:30.304Z","caller":"local:stdio","tool":"rail_query","args":{"query":"钢轨探伤 加强 观测 轻伤 重伤 伤损 缩短周期 区段"},"duration_ms":2540,"status":"ok","result_bytes":848}
+{"ts":"2026-08-31T03:37:11.564Z","caller":"local:stdio","tool":"rail_bad_tool","args":{"query":"x"},"duration_ms":0,"status":"error","error":"Error: unknown tool: rail_bad_tool"}
+{"ts":"2026-08-31T03:58:42.851Z","tool":"(auth)","caller":"unknown","via":"mcp","status":"denied"}
+{"ts":"2026-08-31T03:58:42.952Z","tool":"rail_workorder","caller":"lisi","via":"mcp","status":"denied"}
+{"ts":"2026-08-31T03:58:45.858Z","tool":"rail_query","args":{"query":"钢轨探伤周期"},"caller":"zhangsan","via":"mcp","duration_ms":2892,"status":"ok","result_bytes":827}
+{"ts":"2026-08-31T03:59:05.822Z","tool":"rail_query","args":{"q":"道岔检修周期"},"caller":"zhangsan","via":"rest","duration_ms":2063,"status":"ok"}
+{"ts":"2026-08-31T03:59:05.853Z","tool":"(auth)","caller":"unknown","via":"rest","status":"denied"}
