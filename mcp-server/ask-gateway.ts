@@ -125,7 +125,9 @@ const server = http.createServer(async (req, res) => {
       try {
         const size = fs.statSync(SESSION_FILE).size;
         if (size > offset) {
-          const extra = fs.readFileSync(SESSION_FILE, "utf-8").slice(offset);
+          // offset 是字节数（statSync.size），必须用 Buffer.subarray 按字节切，
+          // 不能 readFileSync("utf-8").slice()——中文多字节下字节≠字符，会切空
+          const extra = fs.readFileSync(SESSION_FILE).subarray(offset).toString("utf-8");
           for (const line of extra.split("\n")) {
             if (!line.trim()) continue;
             try {
