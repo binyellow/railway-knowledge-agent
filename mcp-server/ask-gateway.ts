@@ -172,7 +172,7 @@ document.getElementById('f').onsubmit = e => {
   out.innerHTML = '';
   const es = new EventSource('/ask-stream?q=' + encodeURIComponent(document.getElementById('q').value));
   const add = (cls, txt) => { const d = document.createElement('div'); d.className = cls; d.textContent = txt; out.appendChild(d); window.scrollTo(0, 9e9); };
-  es.addEventListener('open',    e => add('tool', '[wait] 已接入 agent 会话，实时跟踪…'));
+  es.addEventListener('open',    e => add('tool', '[boot] 正在拉起 agent 运行时（CLI 冷启动约 10 秒，实测 97% 耗时在此，LLM 仅约 0.7 秒）…'));
   es.addEventListener('user',    e => add('tool', '[user] ' + JSON.parse(e.data).text));
   es.addEventListener('thinking',e => add('thinking', '[think] ' + JSON.parse(e.data).text));
   es.addEventListener('tool',    e => { const d = JSON.parse(e.data); add('tool', '[tool] 调用 ' + d.name + ' ' + JSON.stringify(d.args)); });
