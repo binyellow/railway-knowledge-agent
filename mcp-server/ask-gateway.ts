@@ -102,7 +102,10 @@ const server = http.createServer(async (req, res) => {
             if (d.type !== "message" || !d.message) continue;
             const msg = d.message;
             if (msg.role === "user") { send("user", { text: msg.content }); continue; }
-            if (msg.role !== "assistant" || !Array.isArray(msg.content)) continue;
+            if (msg.role !== "assistant") continue;
+            // content 两种形态：纯文本回复是 string，带思考/工具时是块数组——都要覆盖
+            if (typeof msg.content === "string") { send("text", { text: msg.content }); continue; }
+            if (!Array.isArray(msg.content)) continue;
             for (const block of msg.content) {
               if (block.type === "thinking") send("thinking", { text: (block.thinking ?? "").slice(0, 600) });
               else if (block.type === "toolCall") {
@@ -127,10 +130,14 @@ const server = http.createServer(async (req, res) => {
             if (!line.trim()) continue;
             try {
               const d = JSON.parse(line);
-              if (d.type === "message" && d.message?.role === "assistant" && Array.isArray(d.message.content)) {
-                for (const block of d.message.content) {
-                  if (block.type === "text" && block.text) send("text", { text: block.text });
-                  else if (block.type === "toolCall") toolsSeen.add(block.name);
+              if (d.type === "message" && d.message?.role === "assistant") {
+                const c = d.message.content;
+                if (typeof c === "string") send("text", { text: c });
+                else if (Array.isArray(c)) {
+                  for (const block of c) {
+                    if (block.type === "text" && block.text) send("text", { text: block.text });
+                    else if (block.type === "toolCall") toolsSeen.add(block.name);
+                  }
                 }
               }
             } catch {}
